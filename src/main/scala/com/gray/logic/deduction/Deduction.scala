@@ -1,6 +1,6 @@
 package com.gray.logic.deduction
 
-import com.gray.logic.deduction.inference.Inference
+import com.gray.logic.deduction.inference.{DeductionStack, Inference}
 import com.gray.logic.formula.Formula
 import com.gray.logic.language.FormulaWriter
 import com.gray.logic.mixin.ControlFlow
@@ -10,9 +10,10 @@ class Deduction(val conclusion: Formula, val premises: Seq[Formula]) extends Con
   private var sequence = DeductionSequence(premises: _*)
 
   def prove(conclusion: Formula) = {
-    infer(conclusion, DeductionSequence(premises: _*)) match {
-      case DeductionSuccess(_, seq, _) => sequence = seq
-        Some(sequence)
+    val request = DeductionRequest(conclusion, DeductionSequence(premises: _*),DeductionStack.empty)
+    infer(request) match {
+      case DeductionSuccess(node, seq, _) => sequence = seq
+        Some(node, sequence)
       case _ => sequence = DeductionSequence(premises:_*)
         None
     }
@@ -25,6 +26,6 @@ class Deduction(val conclusion: Formula, val premises: Seq[Formula]) extends Con
     title + "\n\n" + sequence.write
   }
 
-  override def infer(conclusion: Formula, sequence: DeductionSequence): DeductionResult = DeductionFailure
+  override def infer(request: DeductionRequest): DeductionResult = DeductionFailure
 
 }

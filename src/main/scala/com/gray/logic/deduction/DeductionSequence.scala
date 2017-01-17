@@ -11,6 +11,8 @@ class DeductionSequence(nodes: Seq[DeductionNode], val tier: Int) {
 
   def stepDown = copy(tier = tier - 1)
 
+  def length = nodes.length
+
   def visibleNodes = {
     var _tier = tier
     val visibleNodes = for (node <- nodes.reverse.toList if node.tier <= _tier) yield {
@@ -64,7 +66,7 @@ class DeductionSequence(nodes: Seq[DeductionNode], val tier: Int) {
 
   private def addNode(node: DeductionNode, tier: Int = this.tier) = {
     val newNodes = nodes :+ node
-    (node, copy(newNodes))
+    (node, copy(newNodes, tier))
   }
 
   def addMP(conclusion: Formula, conditional: DeductionNode, antecedent: DeductionNode) = addNode(DeductionNode(conclusion, MP, Seq(conditional, antecedent), tier))

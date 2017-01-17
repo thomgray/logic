@@ -12,8 +12,8 @@ class DeductionSequenceSpec extends FlatSpec with Matchers {
   "addAssumption" should "increment the tier" in {
     val deduction = DeductionSequence(s0)
     deduction.tier shouldBe 0
-    deduction.addAssumptionCP(s1)
-    deduction.tier shouldBe 1
+    val deduction2 = deduction.addAssumptionCP(s1)._2
+    deduction2.tier shouldBe 1
   }
 
   "addCP" should "decrement the tier" in {
@@ -41,7 +41,7 @@ class DeductionSequenceSpec extends FlatSpec with Matchers {
     val deduction2 = deduction.addAssumptionCP(a1)._2
     val deduction3 = deduction2.addAssumptionCP(a2)._2
 
-    val visibles = deduction.visibleNodes
+    val visibles = deduction3.visibleNodes
     visibles.length shouldBe 3
     visibles(0).formula shouldBe p1
     visibles(0).tier shouldBe 0
@@ -62,10 +62,11 @@ class DeductionSequenceSpec extends FlatSpec with Matchers {
 
     deduction.visibleNodes.map(_.formula) shouldBe Seq(s0, s1, s2)
 
-    deduction.nodes.append(cpNode)
-    deduction.tier = 0
+    val newSeq = deduction.appendLine(cpNode)._2.stepDown
 
-    deduction.visibleNodes.map(_.formula) shouldBe Seq(s0, cpFormula)
+    newSeq.tier shouldBe 0
+
+    newSeq.visibleNodes.map(_.formula) shouldBe Seq(s0, cpFormula)
   }
 
 }

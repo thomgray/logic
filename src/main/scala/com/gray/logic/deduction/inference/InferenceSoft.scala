@@ -7,9 +7,7 @@ import com.gray.logic.mixin.ControlFlow
 
 trait InferenceSoft extends Inference with ControlFlow {
 
-  implicit val debugWriter = FormulaWriterAlphabetic
-
-  override def infer(conclusion: Formula, sequence: DeductionSequence) = inferSoft(DeductionRequest(conclusion, sequence, DeductionStackDud))
+  override def infer(request: DeductionRequest) = inferSoft(request)
 
   private def inferSoft(request: DeductionRequest): DeductionResult = {
     request.sequence.findInDeduction(request.conclusion) match {
@@ -145,9 +143,9 @@ trait InferenceSoft extends Inference with ControlFlow {
   }
 
   def inferDNI_Soft(request: DeductionRequest) = continueWithFormula[Negation](request.conclusion) { neg1 =>
-    continueWithFormula[Negation](neg1) { negation2 =>
+    continueWithFormula[Negation](neg1.formula) { negation2 =>
       val (conclusion, sequence, stack) = request.decompose
-      inferSoft(DeductionRequest(negation2, sequence, stack)) match {
+      inferSoft(DeductionRequest(negation2.formula, sequence, stack)) match {
         case DeductionSuccess(dneNode, dneSeq, dneStack) =>
           val (concNode, concSeq) = dneSeq.addDNI(conclusion, dneNode)
           DeductionSuccess(concNode, concSeq, dneStack)

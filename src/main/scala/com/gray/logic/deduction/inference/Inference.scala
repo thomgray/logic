@@ -8,9 +8,7 @@ import scala.reflect._
 
 trait Inference extends ControlFlow{
 
-//  val sequence: DeductionSequence
-
-  def infer(conclusion: Formula, sequence: DeductionSequence): DeductionResult
+  def infer(request: DeductionRequest): DeductionResult
 
   def doFirstSuccessful(formula: Formula)(seq: Seq[(Formula) => Option[DeductionNode]]): Option[DeductionNode] = {
     seq.find(block => block(formula) match {

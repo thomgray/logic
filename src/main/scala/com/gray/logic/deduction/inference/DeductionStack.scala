@@ -2,8 +2,9 @@ package com.gray.logic.deduction.inference
 
 import com.gray.logic.deduction.{DeductionFailure, DeductionResult, InferenceRule}
 import com.gray.logic.formula.{Disjunction, Formula}
+import com.gray.logic.tools.Logging
 
-class DeductionStack (stack: Seq[DeductionStackNode], disjunctions: Seq[Disjunction]){
+class DeductionStack (stack: Seq[DeductionStackNode], disjunctions: Seq[Disjunction]) extends Logging {
 
   def isRestricted(conclusion: Formula, rule: InferenceRule.Value) = !isPermitted(conclusion, rule)
 
@@ -23,14 +24,20 @@ class DeductionStack (stack: Seq[DeductionStackNode], disjunctions: Seq[Disjunct
 
   def check(conclusion: Formula, rule: InferenceRule.Value)(block: (DeductionStack) => DeductionResult) = if (isPermitted(conclusion, rule)){
     block(addRestriction(conclusion, rule))
-  } else DeductionFailure
+  } else {
+    logger.info(s"Blocking inference to [${conclusion.write}]")
+    DeductionFailure
+  }
 
   def checkDisjunction(disjunction: Disjunction)(block: (DeductionStack) => DeductionResult) = if (isPermittedDisjunctionElimination(disjunction)){
     block(addDisjunctionRestriction(disjunction))
   } else DeductionFailure
 
 }
-
+object DeductionStack {
+  def apply(stack: Seq[DeductionStackNode], disjunctions: Seq[Disjunction]): DeductionStack = new DeductionStack(stack, disjunctions)
+  def empty() = new DeductionStack(Nil, Nil)
+}
 case class DeductionStackNode(conclusion: Formula, ruleOption: Option[InferenceRule.Value])
 
 

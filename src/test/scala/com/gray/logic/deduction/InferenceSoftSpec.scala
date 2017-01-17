@@ -5,92 +5,86 @@ import com.gray.logic.formula._
 import com.gray.logic.language.{FormulaWriterAlphabetic, HumanReadable}
 import org.scalatest.{FlatSpec, Matchers}
 
-class InferenceSoftSpec extends FlatSpec with Matchers{
+class InferenceSoftSpec extends FlatSpec with Matchers with InferenceSoft {
 
   implicit val writer = FormulaWriterAlphabetic
+  import scala.language.implicitConversions
+
+  implicit def tupleToDedRequest(tuple: (Formula, DeductionSequence)): DeductionRequest = DeductionRequest(tuple._1, tuple._2, DeductionStackDud)
+
+  implicit def toDedRequest(tuple: (Formula, Seq[Formula])): DeductionRequest = DeductionRequest(tuple._1, DeductionSequence(tuple._2: _*), DeductionStackDud)
 
   "inferMP" should "succeed if the conditional and the antecedent are in the deduction" in {
     val conditional = Conditional(Sentence(0), Sentence(1))
     val antecedent = Sentence(0)
     val consequence = Sentence(1)
 
-    val deduction = new DeductionSoft(consequence, Seq(conditional, antecedent))
-
-    val lastNode = deduction.inferMP_Soft(consequence).get
-
-    deduction.sequence.nodes.length shouldBe 3
-
-    lastNode.formula shouldBe consequence
-    lastNode.inferenceRule shouldBe InferenceRule.MP
+    val premiseSequence = DeductionSequence(conditional, antecedent)
+    inferMP_Soft(DeductionRequest(consequence, premiseSequence, DeductionStackDud)) match {
+      case DeductionSuccess(node, seq, stack) =>
+        seq.length shouldBe 3
+        node.formula shouldBe consequence
+        node.inferenceRule shouldBe InferenceRule.MP
+      case DeductionFailure => fail
+    }
   }
 
   it should "fail if the conditional is not in the deduction" in {
     val antecedent = Sentence(0)
     val consequence = Sentence(1)
 
-    val deduction = new DeductionSoft(consequence, Seq(antecedent))
-    deduction.inferMP_Soft(consequence)
-
-    deduction.inferMP_Soft(consequence) shouldBe None
-
-    deduction.sequence.nodes.length shouldBe 1
+    inferMP_Soft(DeductionRequest(consequence, DeductionSequence(antecedent), DeductionStackDud)) shouldBe DeductionFailure
   }
 
   it should "fail if the antecedent is not in the deduction" in {
     val conditional = Conditional(Sentence(0), Sentence(1))
     val consequence = Sentence(1)
 
-    val deduction = new DeductionSoft(consequence, Seq(conditional))
-    deduction.inferMP_Soft(consequence) shouldBe None
-
-    deduction.sequence.nodes.length shouldBe 1
+    inferMP_Soft(DeductionRequest(consequence, DeductionSequence(conditional), DeductionStackDud)) shouldBe DeductionFailure
   }
 
   "inferDI" should "succeed if one of the disjunction is in the deduction" in {
     val dj1 = Sentence(0)
     val conclusion = Disjunction(dj1, Sentence(1))
 
-    val deduction = DeductionSoft(conclusion, dj1)
+    val initial = DeductionSequence(dj1)
 
-    deduction.inferDI_Soft(conclusion) match {
-      case Some(node) =>
+    inferDI_Soft(DeductionRequest(conclusion, initial, DeductionStackDud)) match {
+      case DeductionSuccess(node, seq, _) =>
         node.formula shouldBe conclusion
         node.inferenceRule shouldBe InferenceRule.DI
-      case None => fail("DI did not succeed")
+      case _ => fail
     }
   }
 
 
   it should "fail if neither disjunct is in the deduction" in {
     val dj1 = Sentence(0)
-    val conclusion = Disjunction(dj1, Sentence(1))
+    val conclusion = Disjunction(Sentence(2), Sentence(1))
 
-    val deduction = DeductionSoft(conclusion)
-    deduction.inferDI_Soft(conclusion) shouldBe None
+    inferDI_Soft(conclusion, DeductionSequence(dj1)) shouldBe DeductionFailure
   }
 
 
   "inferCI" should "succeed if both conjuncts are in the deduction" in {
     val c1 = Sentence(0)
     val c2 = Sentence(1)
-    val conjunction = Conjunction(c1,c2)
+    val conjunction = Conjunction(c1, c2)
 
-    val deduction = DeductionSoft(conjunction, c1, c2)
-    deduction.inferCI_Soft(conjunction) match {
-      case Some(conclusion) =>
+    inferCI_Soft(conjunction, Seq(c1, c2)) match {
+      case DeductionSuccess(conclusion, seq, _) =>
         conclusion.formula shouldBe conjunction
         conclusion.inferenceRule shouldBe InferenceRule.CI
-      case None => fail()
+      case DeductionFailure => fail
     }
   }
 
   it should "fail if either conjunct is not in the deduction" in {
     val c1 = Sentence(0)
     val c2 = Sentence(1)
-    val conjunction = Conjunction(c1,c2)
+    val conjunction = Conjunction(c1, c2)
 
-    val deduction = DeductionSoft(conjunction, c1)
-    deduction.inferCI_Soft(conjunction) shouldBe None
+    inferCI_Soft(conjunction, Seq(c1)) shouldBe DeductionFailure
   }
 
   "inferCE" should "succeed if am appropraite conjunction is in the deduction" in {
@@ -98,13 +92,11 @@ class InferenceSoftSpec extends FlatSpec with Matchers{
     val c2 = Sentence(1)
     val conjunction = Conjunction(c1, c2)
 
-    val deduction = DeductionSoft(c1, conjunction)
-
-    deduction inferCE_Soft c1 match {
-      case Some(DeductionNode(formula, rule)) =>
+    inferCE_Soft(c1, Seq(conjunction)) match {
+      case DeductionSuccess(DeductionNode(formula, rule), _, _) =>
         formula shouldBe c1
         rule shouldBe InferenceRule.CE
-      case _ => fail()
+      case _ => fail
     }
   }
 
@@ -113,9 +105,7 @@ class InferenceSoftSpec extends FlatSpec with Matchers{
     val c2 = Sentence(1)
     val conjunction = Conjunction(Sentence(3), c2)
 
-    val deduction = DeductionSoft(c1, conjunction)
-
-    deduction inferCE_Soft c1 shouldBe None
+    inferCE_Soft(c1, Seq(conjunction)) shouldBe DeductionFailure
   }
 
 
@@ -124,13 +114,11 @@ class InferenceSoftSpec extends FlatSpec with Matchers{
     val c2 = Conditional(Sentence(1), Sentence(0))
     val biconditional = Biconditional(Sentence(0), Sentence(1))
 
-    val deduction = DeductionSoft(biconditional, c1, c2)
-
-    deduction.inferBI_Soft(biconditional) match {
-      case Some(concNode) =>
-        concNode.formula shouldBe biconditional
-        concNode.inferenceRule shouldBe InferenceRule.BI
-      case _ => fail()
+    inferBI_Soft(biconditional, Seq(c1, c2)) match {
+      case DeductionSuccess(DeductionNode(formula, rule), _, _) =>
+        formula shouldBe biconditional
+        rule shouldBe InferenceRule.BI
+      case _ => fail
     }
   }
 
@@ -138,19 +126,16 @@ class InferenceSoftSpec extends FlatSpec with Matchers{
     val c1 = Conditional(Sentence(0), Sentence(1))
     val biconditional = Biconditional(Sentence(0), Sentence(1))
 
-    val deduction = DeductionSoft(biconditional, c1)
-
-    deduction.inferBI_Soft(biconditional) shouldBe None
+    inferBI_Soft(biconditional, Seq(c1)) shouldBe DeductionFailure
   }
 
   "inferBE" should "succeed if an appropriate biconditional is in the deduction" in {
     val c1 = Conditional(Sentence(0), Sentence(1))
     val biconditional = Biconditional(Sentence(0), Sentence(1))
 
-    val deduction = DeductionSoft(c1, biconditional)
-    deduction.inferBE_Soft(c1) match {
-      case Some(DeductionNode(formula, rule)) =>
-        formula shouldBe c1
+    inferBE_Soft(c1, Seq(biconditional)) match {
+      case DeductionSuccess(DeductionNode(conclusion, rule), _, _) =>
+        conclusion shouldBe c1
         rule shouldBe InferenceRule.BE
       case _ => fail
     }
@@ -160,8 +145,7 @@ class InferenceSoftSpec extends FlatSpec with Matchers{
     val c1 = Conditional(Sentence(0), Sentence(2))
     val biconditional = Biconditional(Sentence(0), Sentence(1))
 
-    val deduction = DeductionSoft(c1, biconditional)
-    deduction.inferBE_Soft(c1) shouldBe None
+    inferBE_Soft(c1, Seq(biconditional)) shouldBe DeductionFailure
   }
 
   "inferDNI" should "succeed if the dne of the conclusion is in the deduction" in {
@@ -169,10 +153,9 @@ class InferenceSoftSpec extends FlatSpec with Matchers{
 
     val dni = Negation(Negation(premise))
 
-    val deduction = DeductionSoft(dni, premise)
-
-    deduction.inferDNI_Soft(dni) match {
-      case Some(DeductionNode(formula, InferenceRule.DNI)) => formula shouldBe dni
+    inferDNI_Soft(dni, Seq(premise)) match {
+      case DeductionSuccess(DeductionNode(conclusion, InferenceRule.DNI), _, _) =>
+        conclusion shouldBe dni
       case _ => fail
     }
   }
@@ -181,43 +164,31 @@ class InferenceSoftSpec extends FlatSpec with Matchers{
     val premise = Sentence(0)
     val dni = Negation(Negation(Sentence(1)))
 
-    val deduction = new Deduction(dni, Seq(premise)) with InferenceSoft
-
-    deduction.inferDNI_Soft(dni) shouldBe None
+    inferDNI_Soft(dni, Seq(premise)) shouldBe DeductionFailure
   }
 
   it should "fail if the conclusion is not a double negation" in {
     val premise = Sentence(0)
     val dni = Negation(Sentence(0))
 
-    val deduction = DeductionSoft(dni, premise)
-
-    deduction.inferDNI_Soft(dni) shouldBe None
+    inferDNI_Soft(dni, Seq(premise)) shouldBe DeductionFailure
   }
 
   "inferDNE" should "succeed if the dni of the conclusion is in the deduction" in {
     val conclusion = Sentence(0)
     val premise = Negation(Negation(conclusion))
 
-    val deduction = DeductionSoft(conclusion, premise)
-    deduction inferDNE_Soft conclusion match {
-      case Some(DeductionNode(formuls, InferenceRule.DNE)) => formuls shouldBe conclusion
+    inferDNE_Soft(conclusion, Seq(premise)) match {
+      case DeductionSuccess(DeductionNode(conc, InferenceRule.DNE), _, _) =>
+        conc shouldBe conclusion
       case _ => fail
     }
   }
 
   it should "fail if the dni of the conclusion is not in the deduction" in {
     val conclusion = Sentence(0)
-    val premise = Negation ( Negation (Sentence(1)))
+    val premise = Negation(Negation(Sentence(1)))
 
-    val deduction = DeductionSoft(conclusion, premise)
-    deduction inferDNE_Soft conclusion shouldBe None
+    inferDNE_Soft(conclusion, Seq(premise)) shouldBe DeductionFailure
   }
-}
-
-class DeductionSoft(conclusion: Formula, premises: Seq[Formula]) extends Deduction(conclusion, premises) with InferenceSoft
-
-object DeductionSoft {
-//  def apply(conclusion: Formula, premises: Seq[Formula]): DeductionSoft = new DeductionSoft(conclusion, premises)
-  def apply(conclusion: Formula, premises: Formula*): DeductionSoft = new DeductionSoft(conclusion, premises)
 }
