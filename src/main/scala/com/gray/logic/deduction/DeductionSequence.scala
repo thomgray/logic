@@ -17,6 +17,7 @@ class DeductionSequence(nodes: Seq[DeductionNode], val tier: Int) {
     var _tier = tier
     val visibleNodes = for (node <- nodes.reverse.toList if node.tier <= _tier) yield {
       _tier = node.tier
+      if (InferenceRule.assumptions.contains(node.inferenceRule)) _tier -= 1
       node
     }
     visibleNodes.reverse
@@ -120,7 +121,6 @@ class DeductionSequence(nodes: Seq[DeductionNode], val tier: Int) {
 
   private def stringSegmentsForNodes(writer: FormulaWriter) = nodes.toList.map { node =>
     def indent(i: Int, sofar: String = ""): String = if (i == 0) sofar else indent(i - 1, sofar + "  ")
-
     val formulaString = indent(node.tier) + node.formula.write(writer)
 
     val depString = "{" + node.dependencies.map(lineForNode).mkString(",") + "}"

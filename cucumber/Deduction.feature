@@ -21,13 +21,13 @@ Feature: Deduction using hard inference
     When I attempt to prove "(Ra&Sf(c))"
     Then the deduction succeeds
 
-  @wip
   Scenario: Inferring a multi-step CP
     Given a deduction exists with premises "(B->C), (A->B)"
     When I attempt to prove "(A->C)"
     Then the deduction succeeds
     And show me the deduction
 
+  @wip
   Scenario: Easy DE
     Given a deduction exists with premises "(AVB), (A->B), (C->B)"
     When I attempt to prove "B"
