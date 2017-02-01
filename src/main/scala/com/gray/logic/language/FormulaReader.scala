@@ -1,10 +1,16 @@
 package com.gray.logic.language
 
 import com.gray.logic.formula._
+import scala.util.{Failure, Success, Try}
 
 trait FormulaReader {
 
-  def read(string: String) = readRecursive(before(string))
+  def read(string: String) = Try {
+    readRecursive(before(string))
+  } match {
+    case Success(result) => result
+    case Failure(_) => None
+  }
 
   def apply(string: String): Option[Formula] = read(string)
   def unapply(string: String): Option[Formula] = read(string)

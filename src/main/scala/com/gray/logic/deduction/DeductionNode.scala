@@ -18,13 +18,16 @@ class DeductionNode(val formula: Formula, val inferenceRule: InferenceRule.Value
 
   def dischargeDependency(nodes: DeductionNode*) = {
     val dependenciesNew = dependencies.filterNot(n=>nodes.contains(n))
-    new DeductionNode(formula, inferenceRule, inferences, Some(dependenciesNew))
+    copy(newDependencies = Some(dependenciesNew))
   }
 
   override def equals(obj: scala.Any): Boolean = obj match {
     case formula: Formula => formula==this.formula
     case _ => super.equals(obj)
   }
+
+  def copy(newFormula: Formula = formula, newInferenceRule: InferenceRule.Value = inferenceRule,newInferences: Seq[DeductionNode] = inferences, newDependencies: Option[Seq[DeductionNode]] = Some(dependencies), newTier: Int = tier) = new DeductionNode(newFormula, newInferenceRule,newInferences, newDependencies, newTier)
+
 
 }
 

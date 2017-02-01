@@ -1,9 +1,11 @@
 package cucumber.steps
 
-import com.gray.logic.deduction.{Deduction, DeductionSequence, DeductionSuccess}
+import com.gray.logic.deduction.{Deduction, DeductionSequence, InferenceRule}
 import com.gray.logic.deduction.inference.InferenceHard
 import com.gray.logic.formula.{Formula, Sentence}
 import com.gray.logic.language.{FormulaReaderAlphabetic, FormulaWriterAlphabetic}
+import cucumber.api.PendingException
+import scala.language.implicitConversions
 
 class DeductionSteps extends DeductionBaseSteps {
 
@@ -11,6 +13,14 @@ class DeductionSteps extends DeductionBaseSteps {
 
   implicit val writer = FormulaWriterAlphabetic
   implicit val reader = FormulaReaderAlphabetic
+  implicit def stringToInferenceRule(string: String): InferenceRule.Value = string match {
+    case "DNE" => InferenceRule.DNE
+    case "DNI" => InferenceRule.DNI
+    case "CE" => InferenceRule.CE
+    case "CI" => InferenceRule.CI
+    case "MT" => InferenceRule.MT
+    case _ => throw new PendingException()
+  }
 
   Given("""^a deduction exists with premises "([^"]*)"$""") { (arg0: String) =>
     premises = arg0.split(",").toSeq.map(_.trim).flatMap(f => Formula.read(f))
@@ -32,9 +42,22 @@ class DeductionSteps extends DeductionBaseSteps {
     conclusionNode.get.formula shouldBe conclusion
   }
 
+  Then("""^the deduction fails""") { () =>
+    conclusionNode shouldBe None
+  }
+
   Then("""^show me the deduction$"""){ () =>
     println(deduction.write)
   }
+
+  Then("""^the deduction is (\d+) lines long$"""){ (length : Int) =>
+    deductionSequence.length shouldBe length
+  }
+
+  Then("""^the (\d+)(?:nd|st|rd|th) line in the deduction is a ([A-Z]{2,3})$"""){ (line:Int, inferenceRuleString: String) =>
+    deductionSequence.nodes(line-1).inferenceRule shouldBe stringToInferenceRule(inferenceRuleString)
+  }
+
 
 
 

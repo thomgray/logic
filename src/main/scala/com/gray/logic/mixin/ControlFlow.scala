@@ -1,7 +1,11 @@
 package com.gray.logic.mixin
 
+import com.gray.logic.deduction.inference.{Unproven, Result, Proven}
+
+import scala.concurrent.{Await, Future, Promise}
+import scala.concurrent.duration._
 import scala.reflect.{ClassTag, classTag}
-import scala.util.{Try, Success, Failure}
+import scala.util.{Failure, Success, Try}
 
 
 trait ControlFlow {
@@ -21,6 +25,5 @@ trait ControlFlow {
   def continueWith[T,U](thing: T)(partialFunction: PartialFunction[T,Option[U]]) = if (partialFunction.isDefinedAt(thing)) {
     partialFunction(thing)
   }else None
-
 
 }

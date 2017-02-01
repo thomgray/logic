@@ -9,7 +9,7 @@ object DeductionHolder {
     deduction = null
     conclusionNode = None
     conclusion = null
-    premises = null
+    premises = Nil
     deductionSequence = null
   }
 

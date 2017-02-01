@@ -1,6 +1,6 @@
 package com.gray.logic.deduction.inference
 
-import com.gray.logic.deduction.{DeductionFailure, DeductionResult, InferenceRule}
+import com.gray.logic.deduction.InferenceRule
 import com.gray.logic.formula.{Disjunction, Formula}
 import com.gray.logic.tools.Logging
 
@@ -22,16 +22,16 @@ class DeductionStack (stack: Seq[DeductionStackNode], disjunctions: Seq[Disjunct
 
   def addDisjunctionRestriction(disjunction: Disjunction) = new DeductionStack(stack, disjunctions :+ disjunction)
 
-  def check(conclusion: Formula, rule: InferenceRule.Value)(block: (DeductionStack) => DeductionResult) = if (isPermitted(conclusion, rule)){
+  def check(conclusion: Formula, rule: InferenceRule.Value)(block: (DeductionStack) => Result) = if (isPermitted(conclusion, rule)){
     block(addRestriction(conclusion, rule))
   } else {
     logger.info(s"Blocking inference to [${conclusion.write}]")
-    DeductionFailure
+    Unproven
   }
 
-  def checkDisjunction(disjunction: Disjunction)(block: (DeductionStack) => DeductionResult) = if (isPermittedDisjunctionElimination(disjunction)){
+  def checkDisjunction(disjunction: Disjunction)(block: (DeductionStack) => Result) = if (isPermittedDisjunctionElimination(disjunction)){
     block(addDisjunctionRestriction(disjunction))
-  } else DeductionFailure
+  } else Unproven
 
 }
 object DeductionStack {

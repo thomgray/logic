@@ -1,7 +1,7 @@
 package com.gray.logic.main
 
 import com.gray.logic.deduction.{Deduction, DeductionSequence}
-import com.gray.logic.deduction.inference.InferenceSoft
+import com.gray.logic.deduction.inference.{InferenceHard, InferenceSoft}
 import com.gray.logic.formula._
 import com.gray.logic.language.{FormulaReaderAlphabetic, FormulaWriterAlphabetic, HumanReadable}
 import com.gray.logic.mixin.ControlFlow
@@ -49,7 +49,7 @@ object Main extends App with ControlFlow with HumanReadable {
         val formulaString = s.stripPrefix("prove").trim.replaceAll(" +", "")
         Formula.read(formulaString) match {
           case Some(formula) =>
-            val deduction = new Deduction(formula, formulas) with InferenceSoft
+            val deduction = new Deduction(formula, formulas) with InferenceHard
             deduction.prove(formula) match {
               case Some(_) =>
                 println(deduction.write+"\n")
