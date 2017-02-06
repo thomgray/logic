@@ -1,9 +1,10 @@
+import com.waioeka.sbt.CucumberPlugin
 import sbt._
+import sbt.dsl._
 import sbt.{Build => SbtBuild}
 import sbt.Keys._
 import sbtassembly.Plugin._
 import sbtassembly.Plugin.AssemblyKeys._
-import templemore.sbt.cucumber.CucumberPlugin
 
 object Build extends SbtBuild {
   val Organization = "gray"
@@ -14,6 +15,7 @@ object Build extends SbtBuild {
   val dependencies = Seq(
     "org.scalatest" %% "scalatest" % "3.0.0" % "test",
     "info.cukes" %% "cucumber-scala" % "1.2.4" % "test",
+    "info.cukes" % "cucumber-junit" % "1.2.4",
 
     "org.slf4j" % "slf4j-api" % "1.7.5",
     "org.slf4j" % "slf4j-simple" % "1.7.5",
@@ -21,7 +23,6 @@ object Build extends SbtBuild {
 
     "org.scala-lang.modules" %% "scala-swing" % "1.0.1",
     "org.scala-lang.modules" % "scala-jline" % "2.12.1"
-
   )
 
   lazy val project = Project(
@@ -30,11 +31,9 @@ object Build extends SbtBuild {
     settings =
       Defaults.coreDefaultSettings ++
         assemblySettings ++
-        Seq(CucumberPlugin.cucumberSettings: _*) ++
         Seq(
-          CucumberPlugin.cucumberFeaturesLocation := "cucumber",
-          CucumberPlugin.cucumberJsonReport := true,
-          CucumberPlugin.cucumberStepsBasePackage := "cucumber.steps",
+          CucumberPlugin.glue := "cucumber/steps/",
+          CucumberPlugin.features := List("cucumber"),
           unmanagedResourceDirectories in Compile <+= baseDirectory(_ / "test/fixtures")
         ) ++
         Seq(scalacOptions ++= Seq("-feature", "-target:jvm-1.7", "-language:postfixOps")) ++
@@ -49,11 +48,11 @@ object Build extends SbtBuild {
           mergeStrategy in assembly := {
             case PathList("mime.types") => MergeStrategy.first
             case x =>
-              val oldStrategy = (mergeStrategy in assembly).value
-              oldStrategy(x)
+            val oldStrategy = (mergeStrategy in assembly).value
+            oldStrategy(x)
           },
           libraryDependencies ++= dependencies
         )
-  )
+  ).enablePlugins(CucumberPlugin)
 
 }

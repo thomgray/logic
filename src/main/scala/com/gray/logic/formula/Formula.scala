@@ -11,6 +11,16 @@ trait Formula {
   }
 
   def write(implicit formulaWriter: FormulaWriter) = formulaWriter(this)
+
+  def isComposite = this.isInstanceOf[Compositor]
+
+  def isAtomic = !isComposite
+
+  def decompositions : Seq[Formula] = this match {
+    case f: AtomicFormula => Seq(f)
+    case f @ Connective(decomps) => f +: decomps.flatMap(_.decompositions)
+    case f @ Quantifier(_, decomp) => f +: decomp.decompositions
+  }
 }
 
 object Formula {

@@ -10,7 +10,7 @@ import scala.concurrent.duration._
 
 class DeductionPromiseSpec extends FlatSpec with Matchers {
 
-  val dudSuccess = Proven(DeductionNode(Sentence(0), InferenceRule.Premise, Nil), DeductionSequence(), DeductionStackDud)
+  val dudSuccess = Proven(DeductionNode(Sentence(0), InferenceRule.Premise, Nil), DeductionSequence())
 
   "future" should "complete with a success if any operation is successful" in {
     val f1 = {() => Unproven}

@@ -41,6 +41,13 @@ Feature: Deduction using hard inference
     Then the deduction succeeds
     And show me the deduction
 
+  @DE
+  Scenario: Harder DE
+    Given a deduction exists with premises "(AVB), (DVC)"
+    When I attempt to prove "((((A&D)V(A&C))V(B&D))V(B&C))"
+    Then the deduction succeeds
+    And show me the deduction
+
   @DNE
   Scenario: Easy DNE
     Given a deduction exists with premises "~~~~~~A"

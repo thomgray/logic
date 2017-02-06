@@ -1,5 +1,6 @@
 package com.gray.logic.deduction
 
+import com.gray.logic.deduction.inference.Proven
 import com.gray.logic.formula._
 import com.gray.logic.language.FormulaWriter
 import com.gray.logic.tools.Logging
@@ -23,13 +24,13 @@ class DeductionSequence(val nodes: Seq[DeductionNode], val tier: Int) extends Lo
       if (InferenceRule.assumptions.contains(node.inferenceRule)) _tier -= 1
       node
     }
-    visibleNodes.reverse
+    visibleNodes
   }
 
   def findInDeduction(formula: Formula) = visibleNodes.find(_.formula == formula) match {
     case Some(node) if node.tier < tier =>
       val reiteration = addNode(DeductionNode(node.formula, InferenceRule.Reiteration, Seq(node), tier))
-      Some(reiteration)
+      Some(reiteration.deductionNode, reiteration.sequence)
     case Some(other) => Some(other, this)
     case None => None
   }
@@ -37,7 +38,7 @@ class DeductionSequence(val nodes: Seq[DeductionNode], val tier: Int) extends Lo
   def findInDeduction(f: (DeductionNode) => Boolean) = visibleNodes.find(f) match {
     case Some(node) if node.tier < tier =>
       val reiteration = addNode(DeductionNode(node.formula, InferenceRule.Reiteration, Seq(node), tier))
-      Some(reiteration)
+      Some(reiteration.deductionNode, reiteration.sequence)
     case Some(other) => Some(other, this)
     case None => None
   }
@@ -52,7 +53,7 @@ class DeductionSequence(val nodes: Seq[DeductionNode], val tier: Int) extends Lo
   def findAllInDeduction(f: (DeductionNode) => Boolean) = visibleNodes filter f map {
     case node if node.tier < tier =>
       val reiteration = addNode(DeductionNode(node.formula, InferenceRule.Reiteration, Seq(node), tier))
-      reiteration
+      (reiteration.deductionNode, reiteration.sequence)
     case other => (other, this)
   }
 
@@ -72,7 +73,7 @@ class DeductionSequence(val nodes: Seq[DeductionNode], val tier: Int) extends Lo
     val newNodes = nodes :+ node
     val out = copy(newNodes, tier)
     logger.info(s"new step : \n${out.write}")
-    (node, out)
+    Proven(node, out)
   }
 
   def addMP(conclusion: Formula, conditional: DeductionNode, antecedent: DeductionNode) = addNode(DeductionNode(conclusion, MP, Seq(conditional, antecedent), tier))
@@ -137,7 +138,6 @@ class DeductionSequence(val nodes: Seq[DeductionNode], val tier: Int) extends Lo
   private def lineForNode(deductionNode: DeductionNode) = nodes.indexOf(deductionNode) + 1
 
   private def stringSegmentsForNodes(writer: FormulaWriter) = {
-//    def indent(i: Int, sofar: String = ""): String = if (i == 0) sofar else indent(i - 1, sofar + "  ")
     def indent(tier: Int, sofar: String = ""): String = if (tier==0) sofar else indent(tier-1, sofar + " │")
     nodes.toList.map { node =>
       val formulaString = node.inferenceRule match {
@@ -159,15 +159,19 @@ class DeductionSequence(val nodes: Seq[DeductionNode], val tier: Int) extends Lo
     var lineWidth, dependenciesWidth, formulaWidth, inferneceWidth = 0
     stringSegments foreach { tuple =>
       val (line, dependencies, formula, inference) = tuple
+      val formulaMinFormatting = formula.replaceAll("\\u001b\\[\\d+m", "")
       if (line.length > lineWidth) lineWidth = line.length
       if (dependencies.length > dependenciesWidth) dependenciesWidth = dependencies.length
-      if (formula.length > formulaWidth) formulaWidth = formula.length
+      if (formulaMinFormatting.length > formulaWidth) formulaWidth = formulaMinFormatting.length
       if (inference.length > inferneceWidth) inferneceWidth = inference.length
     }
 
     val regularWidthStrings = stringSegments map { tuple =>
       val (line, dependencies, formula, inference) = tuple
-      (line.padTo(lineWidth, ' '), dependencies.padTo(dependenciesWidth, ' '), formula.padTo(formulaWidth, ' '), inference.padTo(inferneceWidth, ' '))
+      val formulaMinFormatting = formula.replaceAll("\\u001b\\[\\d+m", "")
+      val padToFormula = formulaWidth-formulaMinFormatting.length
+      val paddedFormula = formula + "".padTo(padToFormula, ' ')
+      (line.padTo(lineWidth, ' '), dependencies.padTo(dependenciesWidth, ' '), paddedFormula, inference.padTo(inferneceWidth, ' '))
     }
 
     val lines = regularWidthStrings map { tuple =>

@@ -12,7 +12,7 @@ class Deduction(val conclusion: Formula, val premises: Seq[Formula]) extends Con
   def prove(conclusion: Formula) = {
     val request = DeductionRequest(conclusion, DeductionSequence(premises: _*),DeductionStack.empty)
     infer(request) match {
-      case Proven(node, seq, _) => sequence = seq
+      case Proven(node, seq) => sequence = seq
         Some(node, sequence)
       case _ => sequence = DeductionSequence(premises:_*)
         None

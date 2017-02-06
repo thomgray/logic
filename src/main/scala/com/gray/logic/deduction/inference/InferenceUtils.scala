@@ -29,9 +29,11 @@ trait InferenceUtils extends Extraction {
 
 
   // TODO: refine this!
-  def getFormulasForRAA(sequence: DeductionSequence) = allFormulaDecompositions(sequence) filter  {
+  def getFormulasForRAA(sequence: DeductionSequence) = allFormulaDecompositions(sequence).filter{
     case Negation(_) => false
     case _ => true
+  }.sortWith{(f1,f2) =>
+    f1.decompositions.length <= f2.decompositions.length
   }
 
 }

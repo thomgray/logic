@@ -13,7 +13,7 @@ class InferenceDirectivesTest extends FlatSpec with Matchers with InferenceDirec
 
   implicit val _ = scala.concurrent.ExecutionContext.Implicits.global
 
-  val dudSuccess = Proven(DeductionNode(Sentence(0), InferenceRule.Premise, Nil), DeductionSequence(), DeductionStackDud)
+  val dudSuccess = Proven(DeductionNode(Sentence(0), InferenceRule.Premise, Nil), DeductionSequence())
 
 //  implicit val writer = FormulaWriterAlphabetic
   implicit val reader = FormulaReaderAlphabetic

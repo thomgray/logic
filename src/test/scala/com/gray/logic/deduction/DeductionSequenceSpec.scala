@@ -12,25 +12,25 @@ class DeductionSequenceSpec extends FlatSpec with Matchers {
   "addAssumption" should "increment the tier" in {
     val deduction = DeductionSequence(s0)
     deduction.tier shouldBe 0
-    val deduction2 = deduction.addAssumptionCP(s1)._2
+    val deduction2 = deduction.addAssumptionCP(s1).sequence
     deduction2.tier shouldBe 1
   }
 
   "addCP" should "decrement the tier" in {
     val deduction = DeductionSequence(s0)
     deduction.tier shouldBe 0
-    val (node2, deduction2) = deduction.addAssumptionCP(s1)
-    deduction2.tier shouldBe 1
-    val (node3, deduction3) = deduction2.addCP(s1, node2, node2)
-    node3.tier shouldBe 0
-    deduction3.tier shouldBe 0
+    val proven1 = deduction.addAssumptionCP(s1)
+    proven1.sequence.tier shouldBe 1
+    val proven2 = proven1.sequence.addCP(s1, proven1.deductionNode, proven1.deductionNode)
+    proven2.deductionNode.tier shouldBe 0
+    proven2.sequence.tier shouldBe 0
   }
 
-  "visible nodes" should "return all nodes if all nodes are in the same tier" in {
+  "visible nodes" should "return all nodes if all nodes are in the same tier in reverse order" in {
     val nodes = Seq(Sentence(0), Sentence(1), Sentence(2), Sentence(3))
     val sequence = DeductionSequence(nodes:_*)
 
-    sequence.visibleNodes.map(_.formula) shouldBe nodes
+    sequence.visibleNodes.map(_.formula) shouldBe nodes.reverse
   }
 
   it should "return all nodes visible from the top" in {
@@ -38,10 +38,10 @@ class DeductionSequenceSpec extends FlatSpec with Matchers {
     val a1 = Sentence(1)
     val a2 = Sentence(2)
     val deduction = DeductionSequence(p1)
-    val deduction2 = deduction.addAssumptionCP(a1)._2
-    val deduction3 = deduction2.addAssumptionCP(a2)._2
+    val deduction2 = deduction.addAssumptionCP(a1).sequence
+    val deduction3 = deduction2.addAssumptionCP(a2).sequence
 
-    val visibles = deduction3.visibleNodes
+    val visibles = deduction3.visibleNodes.reverse
     visibles.length shouldBe 3
     visibles(0).formula shouldBe p1
     visibles(0).tier shouldBe 0
@@ -60,13 +60,13 @@ class DeductionSequenceSpec extends FlatSpec with Matchers {
 
     val deduction = new DeductionSequence(Seq(premise, cpAss, cpConc), 1)
 
-    deduction.visibleNodes.map(_.formula) shouldBe Seq(s0, s1, s2)
+    deduction.visibleNodes.map(_.formula) shouldBe Seq(s0, s1, s2).reverse
 
     val newSeq = deduction.appendLine(cpNode)._2.stepDown
 
     newSeq.tier shouldBe 0
 
-    newSeq.visibleNodes.map(_.formula) shouldBe Seq(s0, cpFormula)
+    newSeq.visibleNodes.map(_.formula) shouldBe Seq(cpFormula, s0)
   }
 
 }

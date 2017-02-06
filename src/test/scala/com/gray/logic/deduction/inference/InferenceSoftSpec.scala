@@ -15,7 +15,7 @@ class InferenceSoftSpec extends FlatSpec with Matchers with InferenceSoft with I
 
     val premiseSequence = DeductionSequence(conditional, antecedent)
     inferMP_Soft(DeductionRequest(consequence, premiseSequence, DeductionStackDud)) match {
-      case Proven(node, seq, stack) =>
+      case Proven(node, seq) =>
         seq.length shouldBe 3
         node.formula shouldBe consequence
         node.inferenceRule shouldBe InferenceRule.MP
@@ -44,7 +44,7 @@ class InferenceSoftSpec extends FlatSpec with Matchers with InferenceSoft with I
     val initial = DeductionSequence(dj1)
 
     inferDI_Soft(DeductionRequest(conclusion, initial, DeductionStackDud)) match {
-      case Proven(node, seq, _) =>
+      case Proven(node, seq) =>
         node.formula shouldBe conclusion
         node.inferenceRule shouldBe InferenceRule.DI
       case _ => fail
@@ -66,7 +66,7 @@ class InferenceSoftSpec extends FlatSpec with Matchers with InferenceSoft with I
     val conjunction = Conjunction(c1, c2)
 
     inferCI_Soft(conjunction, Seq(c1, c2)) match {
-      case Proven(conclusion, seq, _) =>
+      case Proven(conclusion, seq) =>
         conclusion.formula shouldBe conjunction
         conclusion.inferenceRule shouldBe InferenceRule.CI
       case Unproven => fail
@@ -87,7 +87,7 @@ class InferenceSoftSpec extends FlatSpec with Matchers with InferenceSoft with I
     val conjunction = Conjunction(c1, c2)
 
     inferCE_Soft(c1, Seq(conjunction)) match {
-      case Proven(DeductionNode(formula, rule), _, _) =>
+      case Proven(DeductionNode(formula, rule), _) =>
         formula shouldBe c1
         rule shouldBe InferenceRule.CE
       case _ => fail
@@ -109,7 +109,7 @@ class InferenceSoftSpec extends FlatSpec with Matchers with InferenceSoft with I
     val biconditional = Biconditional(Sentence(0), Sentence(1))
 
     inferBI_Soft(biconditional, Seq(c1, c2)) match {
-      case Proven(DeductionNode(formula, rule), _, _) =>
+      case Proven(DeductionNode(formula, rule), _) =>
         formula shouldBe biconditional
         rule shouldBe InferenceRule.BI
       case _ => fail
@@ -128,7 +128,7 @@ class InferenceSoftSpec extends FlatSpec with Matchers with InferenceSoft with I
     val biconditional = Biconditional(Sentence(0), Sentence(1))
 
     inferBE_Soft(c1, Seq(biconditional)) match {
-      case Proven(DeductionNode(conclusion, rule), _, _) =>
+      case Proven(DeductionNode(conclusion, rule), _) =>
         conclusion shouldBe c1
         rule shouldBe InferenceRule.BE
       case _ => fail
@@ -148,7 +148,7 @@ class InferenceSoftSpec extends FlatSpec with Matchers with InferenceSoft with I
     val dni = Negation(Negation(premise))
 
     inferDNI_Soft(dni, Seq(premise)) match {
-      case Proven(DeductionNode(conclusion, InferenceRule.DNI), _, _) =>
+      case Proven(DeductionNode(conclusion, InferenceRule.DNI), _) =>
         conclusion shouldBe dni
       case _ => fail
     }
@@ -173,7 +173,7 @@ class InferenceSoftSpec extends FlatSpec with Matchers with InferenceSoft with I
     val premise = Negation(Negation(conclusion))
 
     inferDNE_Soft(conclusion, Seq(premise)) match {
-      case Proven(DeductionNode(conc, InferenceRule.DNE), _, _) =>
+      case Proven(DeductionNode(conc, InferenceRule.DNE), _) =>
         conc shouldBe conclusion
       case _ => fail
     }
