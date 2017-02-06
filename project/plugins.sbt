@@ -4,10 +4,7 @@ resolvers += "Local Ivy repository" at "file:///" + Path.userHome + "/.ivy2/loca
 
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
 
-resolvers += "BBC Forge Artifactory" at "https://dev.bbc.co.uk/maven2/releases/"
-
 resolvers += Classpaths.sbtPluginReleases
-
 
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.3.5")
 
