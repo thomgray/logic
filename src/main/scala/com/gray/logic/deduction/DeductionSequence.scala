@@ -46,7 +46,7 @@ class DeductionSequence(val nodes: Seq[DeductionNode], val tier: Int) extends Lo
   def findAllInDeduction(formula: Formula) = visibleNodes.filter(_.formula == formula) map {
     case node if node.tier < tier =>
       val reiteration = addNode(DeductionNode(node.formula, InferenceRule.Reiteration, Seq(node), tier))
-      reiteration
+      (reiteration.deductionNode, reiteration.sequence)
     case other => (other, this)
   }
 
@@ -61,6 +61,11 @@ class DeductionSequence(val nodes: Seq[DeductionNode], val tier: Int) extends Lo
   def findAllInDeduction(partialFunction: PartialFunction[DeductionNode, Boolean]) = visibleNodes filter { node =>
     if (partialFunction.isDefinedAt(node)) partialFunction(node)
     else false
+  } map {
+    case node if node.tier < tier =>
+      val reiteration = addNode(DeductionNode(node.formula, InferenceRule.Reiteration, Seq(node), tier))
+      (reiteration.deductionNode, reiteration.sequence)
+    case other => (other, this)
   }
 
 

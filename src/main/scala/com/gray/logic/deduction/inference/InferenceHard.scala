@@ -66,7 +66,7 @@ trait InferenceHard extends InferenceSoft with InferenceUtils with Decision with
     var result: Result = Unproven
 
     val ops = conditionals map { conditional => () =>
-      val requestStack = newStack.addRestriction(conditional, InferenceRule.CP)
+      val requestStack = newStack.addRestriction(conditional, InferenceRule.CP).addRestriction(conditional, InferenceRule.RAA)
       inferHard(conditional, request.sequence, requestStack) { conditionalResult =>
         val antecedent = conditional.left
         inferHard(antecedent, conditionalResult.sequence, newStack) { (antecedentNode, antecedentSequenece) =>
@@ -111,7 +111,7 @@ trait InferenceHard extends InferenceSoft with InferenceUtils with Decision with
     val ops = disjunctions map { disjunction => () =>
       info(s"Infer DE Hard: [${request.conclusion.write}] with disjunction [${disjunction.write}]")
       val (leftDj, rightDj) = (disjunction.left, disjunction.right)
-      val stack2 = stack1.addRestriction(disjunction, InferenceRule.DI)
+      val stack2 = stack1.addRestriction(disjunction, InferenceRule.DI).addRestriction(disjunction, InferenceRule.RAA)
       stack2.checkDisjunction(disjunction) { stack3 =>
         inferHard(disjunction, sequence1, stack3) { (disjunctionNode, djSequence) =>
           info(s"Got a disjunction [${disjunction.write}] by ${disjunctionNode.inferenceRule}")
@@ -174,6 +174,7 @@ trait InferenceHard extends InferenceSoft with InferenceUtils with Decision with
       var result: Result = Unproven
 
       val ops = conditionals map (conditional => () => {
+        val requestStack = stack1.addRestriction(conditional, InferenceRule.CP).addRestriction(conditional, InferenceRule.RAA)
         inferHard(conditional, sequence1, stack1) { (conditionalNode, conditionalSeq) =>
           val negatedConsequent = Negation(conditional.right)
           inferHard(negatedConsequent, conditionalSeq, stack1) { (negConsNode, negConsSeq) =>

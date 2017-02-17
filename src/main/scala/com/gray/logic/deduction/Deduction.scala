@@ -29,3 +29,13 @@ class Deduction(val conclusion: Formula, val premises: Seq[Formula]) extends Con
   override def infer(request: DeductionRequest): Result = Unproven
 
 }
+
+object Deduction {
+  def prove(conclusion: Formula, premises: Seq[Formula]) = {
+    val deduction = new Deduction(conclusion, premises) with InferenceHard
+    deduction.prove(conclusion) match {
+      case Some((_, seq)) => seq
+      case None => deduction.sequence
+    }
+  }
+}

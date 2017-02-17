@@ -19,7 +19,8 @@ trait InferenceSoft extends Inference {
           inferDNI_Soft, inferDNE_Soft,
           inferMP_Soft, inferMT_Soft,
           inferCP_Soft,
-          inferDI_Soft
+          inferDI_Soft,
+          inferRAA_Soft
         ))
     }
   }
@@ -181,6 +182,20 @@ trait InferenceSoft extends Inference {
         sequence2.addDNE(conclusion, node)
       case _ => Unproven
     }
+  }
+
+  def inferRAA_Soft(request: DeductionRequest) = request.check(InferenceRule.RAA) { _ =>
+    val (conclusion, sequence, stack) = request.decompose
+    val nonNegated = sequence.findAllInDeduction(n => !n.formula.isInstanceOf[Negation])
+
+//    nonNegated find { tuple =>
+//      val (node, seq) = tuple
+//      seq.findInDeduction(node.formula) match {
+//        case Some(node1, seq1) =>
+//      }
+//    }
+    
+    Unproven
   }
 
 }

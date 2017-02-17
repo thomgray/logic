@@ -49,3 +49,16 @@ Feature: Advanced Deductions
     When I attempt to prove "((A->B)->(A->(C->B)))"
     Then the deduction succeeds
     And show me the deduction
+
+  Scenario: Complicated DE
+    Given a deduction exists with premises "(AVB), (~BVC), (C->~B)"
+    When I attempt to prove "A"
+    Then the deduction succeeds
+    And show me the deduction
+
+    @wip
+  Scenario: (P->(QVR)) : ((P->Q)V(P->R))
+    Given a deduction exists with premises "(A->(BVC))"
+    When I attempt to prove "((A->B)V(A->C))"
+    Then the deduction succeeds
+    And show me the deduction

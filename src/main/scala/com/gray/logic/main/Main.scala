@@ -1,16 +1,16 @@
 package com.gray.logic.main
 
-import com.gray.logic.deduction.{Deduction, DeductionSequence}
-import com.gray.logic.deduction.inference.{InferenceHard, InferenceSoft}
+import com.gray.logic.deduction.Deduction
+import com.gray.logic.deduction.inference.InferenceHard
 import com.gray.logic.formula._
-import com.gray.logic.language.{FormulaReaderAlphabetic, FormulaWriterAlphabetic, HumanReadable}
+import com.gray.logic.language.{FormulaReaderAlphabetic, FormulaWriterAlphabetic}
 import com.gray.logic.mixin.ControlFlow
 
 import scala.collection.mutable
 import scala.tools.jline._
 import scala.tools.jline.console.ConsoleReader
 
-object Main extends App with ControlFlow with HumanReadable {
+object Main extends App with ControlFlow with LogicDSL {
 
   val terminal = TerminalFactory.create()
   val console = new ConsoleReader()
@@ -20,9 +20,19 @@ object Main extends App with ControlFlow with HumanReadable {
   implicit val writer = CustomWriter
   implicit val reader = FormulaReaderAlphabetic
 
-  val `(PvQ)` = Conjunction(Sentence(0), Sentence(1))
-  val `~(PvQ)` = Negation(`(PvQ)`)
-  val `(S->~(PvQ))` = Conditional(Sentence(2), `~(PvQ)`)
+  val P = a sentence
+  val Q = a sentence
+  val S = a sentence
+
+  val `(PvQ)` = P or Q
+  val `~(PvQ)` = not(P or Q)
+  val `(S->~(PvQ))` = S implies not(P or Q)
+
+
+
+  val result = Given(P or Q, S implies not (P or Q)) prove not (S)
+
+  println(result.write)
 
   var continue = true
 

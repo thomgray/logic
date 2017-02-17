@@ -1,48 +1,86 @@
 package com.gray.logic.formula
 
 import scala.collection.mutable.{Set => MutableSet}
+import scala.collection.mutable.{Map => MutableMap}
 
 class Domain() {
 
-  private val _sentences: MutableSet[Int] = MutableSet()
-  private val _relations: MutableSet[Int] = MutableSet()
 
-  private val _variables: MutableSet[Int] = MutableSet()
-  private val _constants: MutableSet[Int] = MutableSet()
-  private val _functions: MutableSet[Int] = MutableSet()
+  private val sentences: MutableSet[Sentence] = MutableSet()
+  private val relations: MutableSet[RelationScheme] = MutableSet()
+  private val constants: MutableSet[Constant] = MutableSet()
+  private val variables: MutableSet[Variable] = MutableSet()
+  private val functions: MutableSet[FunctionScheme] = MutableSet()
 
-  def include(formula: Formula): Unit = formula match {
-    case Sentence(index) => _sentences add index
-    case Relation(index, terms) =>
-      _relations add index
-      terms.foreach(include)
-    case Equals(left, right) =>
-      include(left)
-      include(right)
-  }
+  private val namedConstants: MutableMap[String, Constant] = MutableMap()
+  private val namedRelations: MutableMap[String, RelationScheme] = MutableMap()
+  private val namedSentences: MutableMap[String, Sentence] = MutableMap()
 
-  def include(term: Term): Unit = term match {
-    case Constant(index) => _constants add index
-    case Variable(index) => _variables add index
-    case Function(index, terms) =>
-      _functions add index
-      terms foreach include
-  }
 
   private def findNewIndex(collection: MutableSet[Int], index: Int = 0): Int = collection.contains(index) match {
-    case true => findNewIndex(collection, index+1)
+    case true => findNewIndex(collection, index + 1)
     case false =>
       collection add index
       index
   }
 
-  def oldSentence = Sentence(_sentences.headOption getOrElse 0)
+  def namedConstant(string: String) = namedConstants.applyOrElse(string, { s: String =>
+    val constant = newConstant
+    namedConstants(s) = constant
+    constant
+  })
 
-  def newVariable = Variable(findNewIndex(_variables))
-  def newConstant = Constant(findNewIndex(_constants))
-  def newFunction = FunctionScheme(findNewIndex(_functions))
 
-  def newSentence = Sentence(findNewIndex(_sentences))
-  def newRelation = RelationScheme(findNewIndex(_relations))
+  def namedRelation(string: String) = namedRelations.applyOrElse(string, { s: String =>
+    val relation = newRelation
+    namedRelations(s) = relation
+    relation
+  })
+
+  def namedSentence(string: String) = namedSentences.applyOrElse(string, {s: String =>
+    val sentence = newSentence
+    namedSentences(s) = sentence
+    sentence
+  })
+
+  def oldSentence = sentences.headOption getOrElse newSentence
+
+  def oldConstant = constants.headOption getOrElse newConstant
+
+  def newVariable = {
+    def index = findNewIndex(variables.map(_.index))
+    val variable = Variable(index)
+    variables add variable
+    variable
+  }
+
+  def newConstant = {
+    val index = findNewIndex(constants.map(_.index))
+    val constant = Constant(index)
+    constants add constant
+    constant
+  }
+
+  def newFunction = {
+    val index = findNewIndex(functions.map(_.index))
+    val function = FunctionScheme(index)
+    functions add function
+    val t = FunctionScheme
+    function
+  }
+
+  def newSentence = {
+    val index = findNewIndex(sentences.map(_.index))
+    val sentence = Sentence(index)
+    sentences add sentence
+    sentence
+  }
+
+  def newRelation = {
+    val index = findNewIndex(relations.map(_.index))
+    val relation = RelationScheme(index)
+    relations add relation
+    relation
+  }
 
 }
